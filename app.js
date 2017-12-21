@@ -1,7 +1,7 @@
 'use strict';
 
 const apiai = require('apiai');
-const config = require('./config');
+const config = require('./config/config');
 const express = require('express');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
