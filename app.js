@@ -40,10 +40,10 @@ app.use(express.static('public'));
 // Process application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({
 	extended: false
-}))
+}));
 
 // Process application/json
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 
 const apiAiService = apiai(config.API_AI_CLIENT_ACCESS_TOKEN, {
 	language: "en",
@@ -57,72 +57,10 @@ app.get('/', (req, res) => {
 	res.send('Hello world, I am a chat bot')
 });
 
-// for Facebook verification
-app.get('/webhook/', (req, res) => {
-	console.log("request");
-
-	if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === config.FB_VERIFY_TOKEN) {
-		res.status(200).send(req.query['hub.challenge']);
-	}
-	else {
-		console.error("Failed validation. Make sure the validation tokens match.");
-		res.sendStatus(403);
-	}
-})
-
-/*
- * All callbacks for Messenger are POST-ed. They will be sent to the same
- * webhook. Be sure to subscribe your app to your page to receive callbacks
- * for your page.
- * https://developers.facebook.com/docs/messenger-platform/product-overview/setup#subscribe_app
- *
- */
-app.post('/webhook/', (req, res) => {
-	var data = req.body;
-	console.log(JSON.stringify(data));
-
-	// Make sure this is a page subscription
-	if (data.object == 'page') {
-		// Iterate over each entry
-		// There may be multiple if batched
-		data.entry.forEach(function (pageEntry) {
-			var pageID = pageEntry.id;
-			var timeOfEvent = pageEntry.time;
-
-			// Iterate over each messaging event
-			pageEntry.messaging.forEach(function (messagingEvent) {
-				if (messagingEvent.optin) {
-					receivedAuthentication(messagingEvent);
-				}
-				else if (messagingEvent.message) {
-					receivedMessage(messagingEvent);
-				}
-				else if (messagingEvent.delivery) {
-					receivedDeliveryConfirmation(messagingEvent);
-				}
-				else if (messagingEvent.postback) {
-					receivedPostback(messagingEvent);
-				}
-				else if (messagingEvent.read) {
-					receivedMessageRead(messagingEvent);
-				}
-				else if (messagingEvent.account_linking) {
-					receivedAccountLink(messagingEvent);
-				}
-				else {
-					console.log("Webhook received unknown messagingEvent: ", messagingEvent);
-				}
-			});
-		});
-
-		// Assume all went well.
-		// You must send back a 200, within 20 seconds
-		res.sendStatus(200);
-	}
-});
+// route handlers
+require('./routes/webhookRoutes')(app); // immediately call function, attach app
 
 function receivedMessage(event) {
-
 	var senderID = event.sender.id;
 	var recipientID = event.recipient.id;
 	var timeOfMessage = event.timestamp;
@@ -131,8 +69,9 @@ function receivedMessage(event) {
 	if (!sessionIds.has(senderID)) {
 		sessionIds.set(senderID, uuid.v1());
 	}
-	//console.log("Received message for user %d and page %d at %d with message:", senderID, recipientID, timeOfMessage);
-	//console.log(JSON.stringify(message));
+
+	console.log("Received message for user %d and page %d at %d with message:", senderID, recipientID, timeOfMessage);
+	console.log(JSON.stringify(message));
 
 	var isEcho = message.is_echo;
 	var messageId = message.mid;
@@ -147,7 +86,8 @@ function receivedMessage(event) {
 	if (isEcho) {
 		handleEcho(messageId, appId, metadata);
 		return;
-	} else if (quickReply) {
+	}
+	else if (quickReply) {
 		handleQuickReply(senderID, quickReply, messageId);
 		return;
 	}
@@ -156,7 +96,8 @@ function receivedMessage(event) {
 	if (messageText) {
 		//send message to api.ai
 		sendToApiAi(senderID, messageText);
-	} else if (messageAttachments) {
+	}
+	else if (messageAttachments) {
 		handleMessageAttachments(messageAttachments, senderID);
 	}
 }
@@ -220,14 +161,12 @@ function handleMessage(message, sender) {
 			};
 
 			callSendAPI(messageData);
-
 			break;
 	}
 }
 
 
 function handleCardMessages(messages, sender) {
-
 	let elements = [];
 	for (var m = 0; m < messages.length; m++) {
 		let message = messages[m];
@@ -241,7 +180,8 @@ function handleCardMessages(messages, sender) {
 					"title": message.buttons[b].text,
 					"url": message.buttons[b].postback
 				}
-			} else {
+			}
+			else {
 				button = {
 					"type": "postback",
 					"title": message.buttons[b].text,
@@ -250,7 +190,6 @@ function handleCardMessages(messages, sender) {
 			}
 			buttons.push(button);
 		}
-
 
 		let element = {
 			"title": message.title,
@@ -288,14 +227,17 @@ function handleApiAiResponse(sender, response) {
 				cardTypes = [];
 				timeout = i * timeoutInterval;
 				setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
-			} else if ( messages[i].type == 1 && i == messages.length - 1) {
+			}
+			else if ( messages[i].type == 1 && i == messages.length - 1) {
 				cardTypes.push(messages[i]);
                 		timeout = (i - 1) * timeoutInterval;
                 		setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
                 		cardTypes = [];
-			} else if ( messages[i].type == 1 ) {
+			}
+			else if ( messages[i].type == 1 ) {
 				cardTypes.push(messages[i]);
-			} else {
+			}
+			else {
 				timeout = i * timeoutInterval;
 				setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
 			}
@@ -303,21 +245,25 @@ function handleApiAiResponse(sender, response) {
 			previousType = messages[i].type;
 
 		}
-	} else if (responseText == '' && !isDefined(action)) {
+	}
+	else if (responseText == '' && !isDefined(action)) {
 		//api ai could not evaluate input.
 		console.log('Unknown query' + response.result.resolvedQuery);
 		sendTextMessage(sender, "I'm not sure what you want. Can you be more specific?");
-	} else if (isDefined(action)) {
+	}
+	else if (isDefined(action)) {
 		handleApiAiAction(sender, action, responseText, contexts, parameters);
-	} else if (isDefined(responseData) && isDefined(responseData.facebook)) {
+	}
+	else if (isDefined(responseData) && isDefined(responseData.facebook)) {
 		try {
 			console.log('Response as formatted message' + responseData.facebook);
 			sendTextMessage(sender, responseData.facebook);
-		} catch (err) {
+		}
+		catch (err) {
 			sendTextMessage(sender, err.message);
 		}
-	} else if (isDefined(responseText)) {
-
+	}
+	else if (isDefined(responseText)) {
 		sendTextMessage(sender, responseText);
 	}
 }
@@ -339,9 +285,6 @@ function sendToApiAi(sender, text) {
 	apiaiRequest.end();
 }
 
-
-
-
 function sendTextMessage(recipientId, text) {
 	var messageData = {
 		recipient: {
@@ -356,7 +299,6 @@ function sendTextMessage(recipientId, text) {
 
 /*
  * Send an image using the Send API.
- *
  */
 function sendImageMessage(recipientId, imageUrl) {
 	var messageData = {
@@ -378,7 +320,6 @@ function sendImageMessage(recipientId, imageUrl) {
 
 /*
  * Send a Gif using the Send API.
- *
  */
 function sendGifMessage(recipientId) {
 	var messageData = {
@@ -400,7 +341,6 @@ function sendGifMessage(recipientId) {
 
 /*
  * Send audio using the Send API.
- *
  */
 function sendAudioMessage(recipientId) {
 	var messageData = {
@@ -599,8 +539,6 @@ function sendTypingOn(recipientId) {
  *
  */
 function sendTypingOff(recipientId) {
-
-
 	var messageData = {
 		recipient: {
 			id: recipientId
@@ -723,12 +661,10 @@ function receivedPostback(event) {
 			//unindentified payload
 			sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
 			break;
-
 	}
 
 	console.log("Received postback for user %d and page %d with payload '%s' " +
 		"at %d", senderID, recipientID, payload, timeOfPostback);
-
 }
 
 
@@ -837,7 +773,8 @@ function verifyRequestSignature(req, res, buf) {
 
 	if (!signature) {
 		throw new Error('Couldn\'t validate the signature.');
-	} else {
+	}
+	else {
 		var elements = signature.split('=');
 		var method = elements[0];
 		var signatureHash = elements[1];
