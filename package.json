@@ -4,11 +4,12 @@
   "description": "Express Chatbot AI for Facebook Messenger",
   "main": "app.js",
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git@github.com:fernandedios/nodejs-chabot-ai.git"
   },
   "author": "Fernan de Dios",
   "license": "MIT",

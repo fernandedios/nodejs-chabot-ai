@@ -803,5 +803,5 @@ function isDefined(obj) {
 
 // Spin up the server
 app.listen(app.get('port'), () => {
-	console.log('running on port', app.get('port'))
+	console.log('Server started at port', app.get('port'))
 })
