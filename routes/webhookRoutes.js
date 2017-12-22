@@ -1,3 +1,4 @@
+const helpers = require('../helpers');
 
 module.exports = (app) => {
   // for Facebook verification
@@ -37,7 +38,7 @@ module.exports = (app) => {
   					receivedAuthentication(messagingEvent);
   				}
   				else if (messagingEvent.message) {
-  					receivedMessage(messagingEvent);
+  					helpers.receivedMessage(messagingEvent);
   				}
   				else if (messagingEvent.delivery) {
   					receivedDeliveryConfirmation(messagingEvent);
