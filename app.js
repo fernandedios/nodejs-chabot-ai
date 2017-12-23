@@ -60,12 +60,6 @@ app.get('/', (req, res) => {
 // route handlers
 require('./routes/webhookRoutes')(app); // immediately call function, attach app
 
-function handleQuickReply(senderID, quickReply, messageId) {
-	var quickReplyPayload = quickReply.payload;
-	console.log("Quick reply for message %s with payload %s", messageId, quickReplyPayload);
-	//send payload to api.ai
-	sendToApiAi(senderID, quickReplyPayload);
-}
 
 //https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-echo
 function handleEcho(messageId, appId, metadata) {
@@ -97,7 +91,7 @@ function handleMessage(message, sender) {
 				}
 				replies.push(reply);
 			}
-			sendQuickReply(sender, message.title, replies);
+			sendQuickReply(sender, message.title, replies, apiAiService);
 			break;
 		case 3: //image
 			sendImageMessage(sender, message.imageUrl);
@@ -218,23 +212,6 @@ function handleApiAiResponse(sender, response) {
 	else if (isDefined(responseText)) {
 		sendTextMessage(sender, responseText);
 	}
-}
-
-function sendToApiAi(sender, text) {
-
-	sendTypingOn(sender);
-	let apiaiRequest = apiAiService.textRequest(text, {
-		sessionId: sessionIds.get(sender)
-	});
-
-	apiaiRequest.on('response', (response) => {
-		if (isDefined(response.result)) {
-			handleApiAiResponse(sender, response);
-		}
-	});
-
-	apiaiRequest.on('error', (error) => console.error(error));
-	apiaiRequest.end();
 }
 
 
@@ -454,23 +431,6 @@ function sendReadReceipt(recipientId) {
 			id: recipientId
 		},
 		sender_action: "mark_seen"
-	};
-
-	callSendAPI(messageData);
-}
-
-/*
- * Turn typing indicator on
- *
- */
-function sendTypingOn(recipientId) {
-
-
-	var messageData = {
-		recipient: {
-			id: recipientId
-		},
-		sender_action: "typing_on"
 	};
 
 	callSendAPI(messageData);

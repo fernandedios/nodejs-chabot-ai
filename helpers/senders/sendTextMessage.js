@@ -1,4 +1,4 @@
-const callSendAPI = require('../calls/callSendAPI');
+const callSendAPI = require('../callers/callSendAPI');
 
 module.exports = (recipientId, text) => {
 	var messageData = {
