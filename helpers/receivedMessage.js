@@ -1,4 +1,4 @@
-module.exports = (event) => {
+module.exports = (event, sessionIds) => {
 	let senderID = event.sender.id;
 	let recipientID = event.recipient.id;
 	let timeOfMessage = event.timestamp;

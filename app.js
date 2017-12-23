@@ -58,7 +58,7 @@ app.get('/', (req, res) => {
 });
 
 // route handlers
-require('./routes/webhookRoutes')(app); // immediately call function, attach app
+require('./routes/webhookRoutes')(app, sessionIds); // immediately call function, attach app, sessionIds
 
 
 

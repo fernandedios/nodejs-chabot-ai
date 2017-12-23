@@ -1,6 +1,6 @@
 const helpers = require('../helpers');
 
-module.exports = (app) => {
+module.exports = (app, sessionIds) => {
   // for Facebook verification
   app.get('/webhook/', (req, res) => {
   	console.log("request");
@@ -38,7 +38,7 @@ module.exports = (app) => {
   					receivedAuthentication(messagingEvent);
   				}
   				else if (messagingEvent.message) {
-  					helpers.receivedMessage(messagingEvent);
+  					helpers.receivedMessage(messagingEvent, sessionIds);
   				}
   				else if (messagingEvent.delivery) {
   					receivedDeliveryConfirmation(messagingEvent);
