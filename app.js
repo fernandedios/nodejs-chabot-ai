@@ -61,55 +61,6 @@ app.get('/', (req, res) => {
 require('./routes/webhookRoutes')(app); // immediately call function, attach app
 
 
-//https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-echo
-function handleEcho(messageId, appId, metadata) {
-	// Just logging message echoes to console
-	console.log("Received echo for message %s and app %d with metadata %s", messageId, appId, metadata);
-}
-
-function handleApiAiAction(sender, action, responseText, contexts, parameters) {
-	switch (action) {
-		default:
-			//unhandled action, just send back the text
-			sendTextMessage(sender, responseText);
-	}
-}
-
-function handleMessage(message, sender) {
-	switch (message.type) {
-		case 0: //text
-			sendTextMessage(sender, message.speech);
-			break;
-		case 2: //quick replies
-			let replies = [];
-			for (var b = 0; b < message.replies.length; b++) {
-				let reply =
-				{
-					"content_type": "text",
-					"title": message.replies[b],
-					"payload": message.replies[b]
-				}
-				replies.push(reply);
-			}
-			sendQuickReply(sender, message.title, replies, apiAiService);
-			break;
-		case 3: //image
-			sendImageMessage(sender, message.imageUrl);
-			break;
-		case 4:
-			// custom payload
-			var messageData = {
-				recipient: {
-					id: sender
-				},
-				message: message.payload.facebook
-
-			};
-
-			callSendAPI(messageData);
-			break;
-	}
-}
 
 
 function handleCardMessages(messages, sender) {
@@ -172,7 +123,7 @@ function handleApiAiResponse(sender, response) {
 				setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
 				cardTypes = [];
 				timeout = i * timeoutInterval;
-				setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
+				setTimeout(handleMessage.bind(null, messages[i], sender, apiAiService), timeout);
 			}
 			else if ( messages[i].type == 1 && i == messages.length - 1) {
 				cardTypes.push(messages[i]);
@@ -185,7 +136,7 @@ function handleApiAiResponse(sender, response) {
 			}
 			else {
 				timeout = i * timeoutInterval;
-				setTimeout(handleMessage.bind(null, messages[i], sender), timeout);
+				setTimeout(handleMessage.bind(null, messages[i], sender, apiAiService), timeout);
 			}
 
 			previousType = messages[i].type;
