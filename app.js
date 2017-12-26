@@ -9,7 +9,6 @@ const request = require('request');
 const app = express();
 const uuid = require('uuid');
 
-
 // Messenger API parameters
 if (!config.FB_PAGE_TOKEN) {
 	throw new Error('missing FB_PAGE_TOKEN');
@@ -62,160 +61,19 @@ require('./routes/webhookRoutes')(app, sessionIds); // immediately call function
 
 
 
-function handleApiAiResponse(sender, response) {
-	let responseText = response.result.fulfillment.speech;
-	let responseData = response.result.fulfillment.data;
-	let messages = response.result.fulfillment.messages;
-	let action = response.result.action;
-	let contexts = response.result.contexts;
-	let parameters = response.result.parameters;
-
-	sendTypingOff(sender);
-
-	if (isDefined(messages) && (messages.length == 1 && messages[0].type != 0 || messages.length > 1)) {
-		let timeoutInterval = 1100;
-		let previousType ;
-		let cardTypes = [];
-		let timeout = 0;
-		for (var i = 0; i < messages.length; i++) {
-
-			if ( previousType == 1 && (messages[i].type != 1 || i == messages.length - 1)) {
-
-				timeout = (i - 1) * timeoutInterval;
-				setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
-				cardTypes = [];
-				timeout = i * timeoutInterval;
-				setTimeout(handleMessage.bind(null, messages[i], sender, apiAiService), timeout);
-			}
-			else if ( messages[i].type == 1 && i == messages.length - 1) {
-				cardTypes.push(messages[i]);
-                		timeout = (i - 1) * timeoutInterval;
-                		setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
-                		cardTypes = [];
-			}
-			else if ( messages[i].type == 1 ) {
-				cardTypes.push(messages[i]);
-			}
-			else {
-				timeout = i * timeoutInterval;
-				setTimeout(handleMessage.bind(null, messages[i], sender, apiAiService), timeout);
-			}
-
-			previousType = messages[i].type;
-
-		}
-	}
-	else if (responseText == '' && !isDefined(action)) {
-		//api ai could not evaluate input.
-		console.log('Unknown query' + response.result.resolvedQuery);
-		sendTextMessage(sender, "I'm not sure what you want. Can you be more specific?");
-	}
-	else if (isDefined(action)) {
-		handleApiAiAction(sender, action, responseText, contexts, parameters);
-	}
-	else if (isDefined(responseData) && isDefined(responseData.facebook)) {
-		try {
-			console.log('Response as formatted message' + responseData.facebook);
-			sendTextMessage(sender, responseData.facebook);
-		}
-		catch (err) {
-			sendTextMessage(sender, err.message);
-		}
-	}
-	else if (isDefined(responseText)) {
-		sendTextMessage(sender, responseText);
-	}
-}
 
 
 
 
 
-/*
- * Send a Gif using the Send API.
- */
-function sendGifMessage(recipientId) {
-	var messageData = {
-		recipient: {
-			id: recipientId
-		},
-		message: {
-			attachment: {
-				type: "image",
-				payload: {
-					url: config.SERVER_URL + "/assets/instagram_logo.gif"
-				}
-			}
-		}
-	};
 
-	callSendAPI(messageData);
-}
 
-/*
- * Send audio using the Send API.
- */
-function sendAudioMessage(recipientId) {
-	var messageData = {
-		recipient: {
-			id: recipientId
-		},
-		message: {
-			attachment: {
-				type: "audio",
-				payload: {
-					url: config.SERVER_URL + "/assets/sample.mp3"
-				}
-			}
-		}
-	};
 
-	callSendAPI(messageData);
-}
 
-/*
- * Send a video using the Send API.
- * example videoName: "/assets/allofus480.mov"
- */
-function sendVideoMessage(recipientId, videoName) {
-	var messageData = {
-		recipient: {
-			id: recipientId
-		},
-		message: {
-			attachment: {
-				type: "video",
-				payload: {
-					url: config.SERVER_URL + videoName
-				}
-			}
-		}
-	};
 
-	callSendAPI(messageData);
-}
 
-/*
- * Send a video using the Send API.
- * example fileName: fileName"/assets/test.txt"
- */
-function sendFileMessage(recipientId, fileName) {
-	var messageData = {
-		recipient: {
-			id: recipientId
-		},
-		message: {
-			attachment: {
-				type: "file",
-				payload: {
-					url: config.SERVER_URL + fileName
-				}
-			}
-		}
-	};
 
-	callSendAPI(messageData);
-}
+
 
 
 
@@ -505,18 +363,6 @@ function verifyRequestSignature(req, res, buf) {
 			throw new Error("Couldn't validate the request signature.");
 		}
 	}
-}
-
-function isDefined(obj) {
-	if (typeof obj == 'undefined') {
-		return false;
-	}
-
-	if (!obj) {
-		return false;
-	}
-
-	return obj != null;
 }
 
 // Spin up the server
