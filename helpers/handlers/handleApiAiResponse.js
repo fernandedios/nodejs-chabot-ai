@@ -15,27 +15,27 @@ module.exports = (sender, response) => {
 
 	sendTypingOff(sender);
 
-	if (isDefined(messages) && (messages.length == 1 && messages[0].type != 0 || messages.length > 1)) {
+	if (isDefined(messages) && (messages.length === 1 && messages[0].type !== 0 || messages.length > 1)) {
 		let timeoutInterval = 1100;
 		let previousType ;
 		let cardTypes = [];
 		let timeout = 0;
 		for (let i = 0; i < messages.length; i++) {
 
-			if ( previousType == 1 && (messages[i].type != 1 || i == messages.length - 1)) {
+			if ( previousType === 1 && (messages[i].type !== 1 || i === messages.length - 1)) {
 				timeout = (i - 1) * timeoutInterval;
 				setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
 				cardTypes = [];
 				timeout = i * timeoutInterval;
 				setTimeout(handleMessage.bind(null, messages[i], sender, apiAiService), timeout);
 			}
-			else if ( messages[i].type == 1 && i == messages.length - 1) {
+			else if ( messages[i].type === 1 && i === messages.length - 1) {
 				cardTypes.push(messages[i]);
         timeout = (i - 1) * timeoutInterval;
     		setTimeout(handleCardMessages.bind(null, cardTypes, sender), timeout);
     		cardTypes = [];
 			}
-			else if ( messages[i].type == 1 ) {
+			else if ( messages[i].type === 1 ) {
 				cardTypes.push(messages[i]);
 			}
 			else {
@@ -46,7 +46,7 @@ module.exports = (sender, response) => {
 			previousType = messages[i].type;
 		}
 	}
-	else if (responseText == '' && !isDefined(action)) {
+	else if (responseText === '' && !isDefined(action)) {
 		//api ai could not evaluate input.
 		console.log('Unknown query' + response.result.resolvedQuery);
 		sendTextMessage(sender, "I'm not sure what you want. Can you be more specific?");
@@ -66,4 +66,4 @@ module.exports = (sender, response) => {
 	else if (isDefined(responseText)) {
 		sendTextMessage(sender, responseText);
 	}
-}
+};
