@@ -1,3 +1,4 @@
+const config = require('../config/config');
 const helpers = require('../helpers');
 
 module.exports = (app, sessionIds) => {
@@ -21,7 +22,7 @@ module.exports = (app, sessionIds) => {
    * https://developers.facebook.com/docs/messenger-platform/product-overview/setup#subscribe_app
    */
   app.post('/webhook/', (req, res) => {
-  	var data = req.body;
+  	const data = req.body;
   	console.log(JSON.stringify(data));
 
   	// Make sure this is a page subscription
@@ -29,28 +30,28 @@ module.exports = (app, sessionIds) => {
   		// Iterate over each entry
   		// There may be multiple if batched
   		data.entry.forEach(function (pageEntry) {
-  			var pageID = pageEntry.id;
-  			var timeOfEvent = pageEntry.time;
+  			const pageID = pageEntry.id;
+  			const timeOfEvent = pageEntry.time;
 
   			// Iterate over each messaging event
-  			pageEntry.messaging.forEach(function (messagingEvent) {
+  			pageEntry.messaging.forEach(messagingEvent => {
   				if (messagingEvent.optin) {
-  					receivedAuthentication(messagingEvent);
+  					helpers.receivedAuthentication(messagingEvent);
   				}
   				else if (messagingEvent.message) {
   					helpers.receivedMessage(messagingEvent, sessionIds);
   				}
   				else if (messagingEvent.delivery) {
-  					receivedDeliveryConfirmation(messagingEvent);
+  					helpers.receivedDeliveryConfirmation(messagingEvent);
   				}
   				else if (messagingEvent.postback) {
-  					receivedPostback(messagingEvent);
+  					helpers.receivedPostback(messagingEvent);
   				}
   				else if (messagingEvent.read) {
-  					receivedMessageRead(messagingEvent);
+  					helpers.receivedMessageRead(messagingEvent);
   				}
   				else if (messagingEvent.account_linking) {
-  					receivedAccountLink(messagingEvent);
+  					helpers.receivedAccountLink(messagingEvent);
   				}
   				else {
   					console.log("Webhook received unknown messagingEvent: ", messagingEvent);
