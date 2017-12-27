@@ -1,14 +1,21 @@
 'use strict';
 
 const apiai = require('apiai');
-const config = require('./config/config');
 const express = require('express');
 const bodyParser = require('body-parser');
 const request = require('request');
 const app = express();
 const uuid = require('uuid');
 
+const config = require('./config/config');
 const verifyRequestSignature = require('./middlewares/verifyRequestSignature');
+
+const apiAiService = apiai(config.API_AI_CLIENT_ACCESS_TOKEN, {
+	language: "en",
+	requestSource: "fb"
+});
+
+const sessionIds = new Map();
 
 // Messenger API parameters
 if (!config.FB_PAGE_TOKEN) {
@@ -44,13 +51,6 @@ app.use(bodyParser.urlencoded({
 
 // Process application/json
 app.use(bodyParser.json());
-
-const apiAiService = apiai(config.API_AI_CLIENT_ACCESS_TOKEN, {
-	language: "en",
-	requestSource: "fb"
-});
-
-const sessionIds = new Map();
 
 // Index route
 app.get('/', (req, res) => {
