@@ -1,4 +1,4 @@
-module.exports = isDefined(obj) => {
+module.exports = (obj) => {
 	if (typeof obj === 'undefined') {
 		return false;
 	}

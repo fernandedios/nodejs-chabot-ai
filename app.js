@@ -8,6 +8,8 @@ const request = require('request');
 const app = express();
 const uuid = require('uuid');
 
+const verifyRequestSignature = require('./middlewares/verifyRequestSignature');
+
 // Messenger API parameters
 if (!config.FB_PAGE_TOKEN) {
 	throw new Error('missing FB_PAGE_TOKEN');

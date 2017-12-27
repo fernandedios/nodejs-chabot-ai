@@ -1,4 +1,4 @@
-const sendTextMessage = require('../senders/sendTextMessage');
+const sendTextMessage = require('./senders/sendTextMessage');
 
 /*
  * Postback Event
